@@ -4,40 +4,45 @@ import java.util.Random;
 import java.util.Scanner;
 
 public class GameEngine {
+    private final int countSymbols;
+    private final int range;
     private String secretCode;
     private int turn;
     private boolean win;
 
-    public GameEngine(int countSymbols) {
+    public String getSecretCode() {
+        return secretCode;
+    }
+
+    public GameEngine(int countSymbols, int range) {
+        this.countSymbols = countSymbols;
+        this.range = range;
         win = false;
         turn = 0;
-        secretCode = getSecretCode(countSymbols);
+        secretCode = makeSecretCode();
     }
 
-    private char inc(char symbol) {
-        int step = Character.getNumericValue(symbol);
-        step = (step < 9) ? step + 1 : 0;
-        return Character.forDigit(step, 10);
+    private String intToStr(int intPos) {
+        int res = (intPos < 10) ? intPos + 48 : intPos + 87;
+        return Character.toString(res);
     }
 
-    private String setUnique(String strIn) {
+    private String getRandSymbol() {
+        Random random = new Random();
+        int intRand = random.nextInt(range);
+        return intToStr(intRand);
+    }
+
+    private String makeSecretCode() {
         StringBuilder out = new StringBuilder();
-        char symbol;
-        for (int i = 0; i < strIn.length(); i++) {
-            symbol = strIn.charAt(i);
-            if (i == 0 && symbol == '0') symbol = inc(symbol);
-            while (out.indexOf(Character.toString(symbol)) >= 0)
-                symbol = inc(symbol);
+        String symbol;
+        for (int i = 0; i < countSymbols; i++) {
+            do {
+                symbol = getRandSymbol();
+            } while (out.indexOf(symbol) >= 0);
             out.append(symbol);
         }
         return out.toString();
-    }
-
-    public String getSecretCode(int count) {
-        Random random = new Random();
-        long longRand = random.nextLong();
-        String out = String.valueOf(longRand);
-        return setUnique(out.substring(out.length() - count));
     }
 
     private void makeTurn() {
@@ -61,12 +66,10 @@ public class GameEngine {
             else if (secretCode.contains(Character.toString(anim)))
                 cows++;
         }
-
         if (bulls == 0 && cows == 0)
             out = "None. ";
         else
             out = bulls + " bull(s) and " + cows + " cow(s). ";
-
         win = secretCode.equals(answer);
         return out;
     }
@@ -79,5 +82,20 @@ public class GameEngine {
         while (!win)
             makeTurn();
         printWin();
+    }
+
+    public String welcomeMsg() {
+        StringBuilder msg = new StringBuilder("The secret is prepared: ");
+        for (int i = 0; i < countSymbols; i++)
+            msg.append("*");
+        msg.append(" (0-");
+        if (range < 11)
+            msg.append(intToStr(range-1));
+        else if (range == 11)
+            msg.append("9, a");
+        else
+            msg.append("9, a-" + intToStr(range-1));
+        msg.append(").");
+        return msg.toString();
     }
 }
